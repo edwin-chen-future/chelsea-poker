@@ -1,41 +1,100 @@
 # Chelsea Poker
 
-A poker game application.
+A personal poker session tracker. Record stakes, duration, win/loss, and location from an iOS app. Sessions are persisted via a Node.js backend.
 
 ## Features
 
-- [ ] Texas Hold'em gameplay
-- [ ] Multiplayer support
-- [ ] Hand history and statistics
-- [ ] Betting rounds and pot management
+- [x] Record poker sessions (stake, duration, win/loss, location)
+- [x] Persist sessions via REST API backed by SQLite
+- [x] View session history sorted newest first
+- [ ] Session statistics & charts
 
 ## Tech Stack
 
-> _To be updated as the project develops._
+| Layer | Technology |
+|---|---|
+| iOS App | SwiftUI (iOS 16+) |
+| Backend | Node.js + Express |
+| Database | SQLite (via better-sqlite3) |
+| iOS Tests | XCTest + MockURLProtocol |
+| Backend Tests | Jest + supertest |
 
 ## Getting Started
 
 ### Prerequisites
 
-> _List required runtimes, package managers, and system dependencies here._
+- **Backend:** Node.js 18+, npm
+- **iOS:** Xcode 15+, macOS 13+
 
-### Installation
-
-```bash
-git clone https://github.com/edwin-chen-future/chelsea-poker.git
-cd chelsea-poker
-# install dependencies
-```
-
-### Running the App
+### Backend Setup
 
 ```bash
-# start command here
+cd backend
+npm install
+npm start          # starts on http://localhost:3000
+npm test           # run all backend tests
 ```
 
-## Usage
+### iOS Setup
 
-> _Add usage examples and screenshots here._
+1. Open `ChelseaPoker/ChelseaPoker.xcodeproj` in Xcode.
+2. Select the `ChelseaPoker` scheme and a simulator (or your device).
+3. If running on a **physical device**: open `ChelseaPoker/ChelseaPoker/Services/SessionService.swift` and update the `baseURL` to your machine's LAN IP (e.g. `http://192.168.1.x:3000`).
+4. Press **Cmd+R** to build and run.
+5. Press **Cmd+U** to run the unit tests.
+
+## API Reference
+
+### `POST /api/sessions`
+
+Create a new session.
+
+**Request body:**
+```json
+{
+  "stake": "$1/$2",
+  "duration_minutes": 180,
+  "amount": 250,
+  "location": "Bike Casino"
+}
+```
+
+- `amount`: integer dollars — positive = win, negative = loss, zero = breakeven.
+
+**Response `201`:**
+```json
+{
+  "id": 1,
+  "stake": "$1/$2",
+  "duration_minutes": 180,
+  "amount": 250,
+  "location": "Bike Casino",
+  "played_at": "2026-03-15T20:00:00Z"
+}
+```
+
+### `GET /api/sessions`
+
+Returns all sessions sorted newest first.
+
+**Response `200`:** array of session objects.
+
+## Project Structure
+
+```
+backend/                  Node.js API server
+  routes/sessions.js      POST + GET /api/sessions
+  db.js                   SQLite connection & schema
+  server.js               Express app entry point
+  tests/                  Jest tests
+
+ChelseaPoker/             Xcode project
+  ChelseaPoker/
+    Models/               PokerSession Codable struct
+    Services/             SessionService (URLSession), SessionStore (ObservableObject)
+    Views/                ContentView, SessionListView, AddSessionView
+  ChelseaPokerTests/      XCTest suite
+```
 
 ## Contributing
 
