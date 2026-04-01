@@ -12,15 +12,53 @@ A personal poker session tracker. Log each session with stake, duration, result,
 
 ## Tech Stack
 
-| Layer    | Technology              |
-|----------|-------------------------|
-| Frontend | Vanilla HTML/CSS/JS     |
-| Backend  | Node.js + Express       |
-| Database | PostgreSQL (via `pg`)   |
-| Hosting  | Render (free tier)      |
-| Tests    | Jest + Supertest        |
+| Layer        | Technology                                  |
+|--------------|---------------------------------------------|
+| iOS App      | React Native + Expo (managed workflow)      |
+| Navigation   | React Navigation v6 (bottom tabs)           |
+| Web Frontend | Vanilla HTML/CSS/JS (legacy)                |
+| Backend      | Node.js + Express                           |
+| Database     | PostgreSQL (via `pg`)                       |
+| Hosting      | Render (free tier)                          |
+| Tests        | Jest + Supertest (backend), RNTL (mobile)   |
 
-## Getting Started
+## iOS App
+
+The primary client is a React Native app built with Expo (managed workflow).
+
+### Prerequisites
+
+- Node.js 18+
+- [Expo CLI](https://docs.expo.dev/get-started/installation/): `npm install -g expo-cli`
+- Expo Go app on your iPhone (for device testing), or Xcode for simulator
+
+### Running the Mobile App
+
+```bash
+cd mobile
+npm install
+npm start         # opens Expo Dev Tools; scan QR code with Expo Go
+npm run ios       # opens iOS Simulator (requires Xcode on macOS)
+```
+
+### Configuring the API URL
+
+By default the app points to `http://localhost:3000`. To use a deployed backend, create `mobile/.env`:
+
+```
+EXPO_PUBLIC_API_URL=https://chelsea-poker.onrender.com
+```
+
+### Running Mobile Tests
+
+```bash
+cd mobile
+npm test
+```
+
+Tests use Jest + React Native Testing Library and do not require a device or simulator.
+
+## Backend / Web App
 
 ### Prerequisites
 
@@ -33,6 +71,13 @@ A personal poker session tracker. Log each session with stake, duration, result,
 git clone https://github.com/edwin-chen-future/chelsea-poker.git
 cd chelsea-poker/backend
 npm install
+```
+
+### Running Tests
+
+```bash
+cd backend
+npm test
 ```
 
 ### Environment Variables
@@ -58,13 +103,6 @@ npm run dev      # development (auto-restart on file change, Node 18+)
 ```
 
 Then open [http://localhost:3000](http://localhost:3000).
-
-### Running Tests
-
-```bash
-cd backend
-npm test
-```
 
 Tests mock the database and do not require a running PostgreSQL instance.
 
