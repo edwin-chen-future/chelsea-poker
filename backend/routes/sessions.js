@@ -57,4 +57,51 @@ router.get('/', async (req, res) => {
   }
 });
 
+// PUT /api/sessions/:id — update an existing session
+router.put('/:id', async (req, res) => {
+  const { id } = req.params;
+  const { stake, duration_minutes, result_amount, location, session_date, notes } = req.body;
+
+  if (!stake || typeof stake !== 'string' || stake.trim() === '') {
+    return res.status(400).json({ error: 'stake is required and must be a non-empty string' });
+  }
+  if (duration_minutes == null || !Number.isInteger(Number(duration_minutes)) || Number(duration_minutes) <= 0) {
+    return res.status(400).json({ error: 'duration_minutes is required and must be a positive integer' });
+  }
+  if (result_amount == null || isNaN(Number(result_amount))) {
+    return res.status(400).json({ error: 'result_amount is required and must be a number' });
+  }
+  if (!location || typeof location !== 'string' || location.trim() === '') {
+    return res.status(400).json({ error: 'location is required and must be a non-empty string' });
+  }
+  if (!session_date || typeof session_date !== 'string' || session_date.trim() === '') {
+    return res.status(400).json({ error: 'session_date is required' });
+  }
+
+  try {
+    const result = await pool.query(
+      `UPDATE sessions
+       SET stake = $1, duration_minutes = $2, result_amount = $3, location = $4, session_date = $5, notes = $6
+       WHERE id = $7
+       RETURNING *`,
+      [
+        stake.trim(),
+        Number(duration_minutes),
+        Number(result_amount),
+        location.trim(),
+        session_date.trim(),
+        notes ? notes.trim() : null,
+        id,
+      ]
+    );
+    if (result.rows.length === 0) {
+      return res.status(404).json({ error: 'Session not found' });
+    }
+    return res.json(result.rows[0]);
+  } catch (err) {
+    console.error('Error updating session:', err);
+    return res.status(500).json({ error: 'Failed to update session' });
+  }
+});
+
 module.exports = router;
