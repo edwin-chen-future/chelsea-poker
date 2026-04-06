@@ -71,11 +71,11 @@ export function ChartsScreen() {
 
   const filtered = useMemo(() => {
     const cutoff = getRangeCutoff(range);
-    // Sort ascending by date string (YYYY-MM-DD), then by id for same-date sessions
+    // Sort ascending by date, then by created_at timestamp for same-date sessions
     const sorted = [...sessions].sort(
       (a, b) =>
         a.session_date.localeCompare(b.session_date) ||
-        (a.id ?? 0) - (b.id ?? 0)
+        new Date(a.created_at) - new Date(b.created_at)
     );
     if (!cutoff) return sorted;
     return sorted.filter((s) => new Date(s.session_date) >= cutoff);
