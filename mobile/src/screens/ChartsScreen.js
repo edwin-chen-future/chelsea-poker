@@ -240,7 +240,8 @@ function CumulativeChart({ data }) {
   const minVal = Math.min(...values, 0);
   const range = maxVal - minVal || 1;
 
-  const chartWidth = Dimensions.get('window').width - spacing.md * 2 - CHART_PADDING * 2 - 32;
+  const RIGHT_PAD = 16;
+  const chartWidth = Dimensions.get('window').width - spacing.md * 2 - CHART_PADDING * 2 - 48 - RIGHT_PAD;
   const stepX = chartWidth / (data.length - 1);
 
   // Calculate y position (inverted because 0,0 is top-left)
@@ -470,7 +471,7 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: 0,
     left: 48,
-    right: 0,
+    right: 16,
     height: CHART_HEIGHT,
   },
   zeroLine: {
