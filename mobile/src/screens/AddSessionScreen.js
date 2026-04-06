@@ -31,7 +31,8 @@ function validate({ location, date, hours, minutes, result }) {
 
 export function AddSessionScreen() {
   const [stake, setStake] = useState(STAKES[0]);
-  const [location, setLocation] = useState('');
+  const LOCATIONS = ['Commerce', 'Bicycle', 'Wynn', 'Palm Spring'];
+  const [location, setLocation] = useState(LOCATIONS[0]);
   const [date, setDate] = useState(todayString());
   const [hours, setHours] = useState('');
   const [minutes, setMinutes] = useState('');
@@ -112,14 +113,17 @@ export function AddSessionScreen() {
         </View>
 
         <Text style={styles.label}>Location</Text>
-        <TextInput
-          style={styles.input}
-          value={location}
-          onChangeText={setLocation}
-          placeholder="e.g. Bicycle Club"
-          placeholderTextColor={colors.textTertiary}
-          autoCorrect={false}
-        />
+        <View style={styles.stakeRow}>
+          {LOCATIONS.map((loc) => (
+            <TouchableOpacity
+              key={loc}
+              style={[styles.stakeButton, location === loc && styles.stakeButtonActive]}
+              onPress={() => setLocation(loc)}
+            >
+              <Text style={[styles.stakeButtonText, location === loc && styles.stakeButtonTextActive]}>{loc}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
 
         <Text style={styles.label}>Date</Text>
         <TextInput
