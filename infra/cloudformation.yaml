@@ -7,6 +7,14 @@ Parameters:
     NoEcho: true
     MinLength: 8
     Description: Password for the RDS Postgres database
+  JwtSecret:
+    Type: String
+    NoEcho: true
+    MinLength: 8
+    Description: Secret key for signing JWT tokens
+  GoogleClientIds:
+    Type: String
+    Description: Comma-separated Google OAuth client IDs for token validation
   ECRImageUri:
     Type: String
     Description: ECR image URI (e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com/chelsea-poker:latest)
@@ -157,6 +165,10 @@ Resources:
               Value: '3000'
             - Name: DATABASE_URL
               Value: !Sub postgresql://postgres:${DBPassword}@${Database.Endpoint.Address}:5432/chelsea_poker
+            - Name: JWT_SECRET
+              Value: !Ref JwtSecret
+            - Name: GOOGLE_CLIENT_IDS
+              Value: !Ref GoogleClientIds
           LogConfiguration:
             LogDriver: awslogs
             Options:
@@ -208,6 +220,7 @@ Resources:
           - DELETE
         AllowHeaders:
           - Content-Type
+          - Authorization
 
   HttpApiIntegration:
     Type: AWS::ApiGatewayV2::Integration
