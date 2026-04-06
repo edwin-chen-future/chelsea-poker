@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -9,6 +9,7 @@ import {
   KeyboardAvoidingView,
   Platform,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
 import { createSession } from '../services/api';
 import { colors, spacing, radius } from '../constants';
@@ -29,7 +30,7 @@ function validate({ location, date, hours, minutes, result }) {
   return null;
 }
 
-export function AddSessionScreen() {
+export function AddSessionScreen({ navigation }) {
   const [stake, setStake] = useState(STAKES[0]);
   const [location, setLocation] = useState('');
   const [date, setDate] = useState(todayString());
@@ -38,20 +39,30 @@ export function AddSessionScreen() {
   const [result, setResult] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
-  const [successMessage, setSuccessMessage] = useState('');
   const [errorMessage, setErrorMessage] = useState('');
+
+  useFocusEffect(
+    useCallback(() => {
+      setStake(STAKES[0]);
+      setLocation('');
+      setDate(todayString());
+      setHours('');
+      setMinutes('');
+      setResult('');
+      setNotes('');
+      setErrorMessage('');
+    }, [])
+  );
 
   async function handleSubmit() {
     const validationError = validate({ location, date, hours, minutes, result });
     if (validationError) {
       setErrorMessage(validationError);
-      setSuccessMessage('');
       return;
     }
 
     setSubmitting(true);
     setErrorMessage('');
-    setSuccessMessage('');
 
     try {
       const totalMinutes =
@@ -65,13 +76,7 @@ export function AddSessionScreen() {
         notes: notes.trim() || undefined,
       });
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      setSuccessMessage('Session recorded!');
-      setLocation('');
-      setDate(todayString());
-      setHours('');
-      setMinutes('');
-      setResult('');
-      setNotes('');
+      navigation.navigate('Sessions');
     } catch (err) {
       setErrorMessage(err.message);
     } finally {
@@ -175,9 +180,6 @@ export function AddSessionScreen() {
         {errorMessage ? (
           <Text style={styles.errorText}>{errorMessage}</Text>
         ) : null}
-        {successMessage ? (
-          <Text style={styles.successText}>{successMessage}</Text>
-        ) : null}
 
         <TouchableOpacity
           style={[styles.submitButton, submitting && styles.submitButtonDisabled]}
@@ -272,13 +274,6 @@ const styles = StyleSheet.create({
   errorText: {
     color: colors.loss,
     fontSize: 14,
-    marginTop: spacing.md,
-    textAlign: 'center',
-  },
-  successText: {
-    color: colors.win,
-    fontSize: 14,
-    fontWeight: '600',
     marginTop: spacing.md,
     textAlign: 'center',
   },

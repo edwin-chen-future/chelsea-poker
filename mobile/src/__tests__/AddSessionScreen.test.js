@@ -6,7 +6,13 @@ jest.mock('../services/api', () => ({
   createSession: jest.fn(),
 }));
 
+jest.mock('@react-navigation/native', () => ({
+  useFocusEffect: jest.fn((cb) => cb()),
+}));
+
 const { createSession } = require('../services/api');
+
+const mockNavigation = { navigate: jest.fn() };
 
 describe('AddSessionScreen', () => {
   beforeEach(() => {
@@ -14,7 +20,7 @@ describe('AddSessionScreen', () => {
   });
 
   it('renders all required form fields', () => {
-    const { getByPlaceholderText } = render(<AddSessionScreen />);
+    const { getByPlaceholderText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     expect(getByPlaceholderText('e.g. Bicycle Club')).toBeTruthy();
     expect(getByPlaceholderText('YYYY-MM-DD')).toBeTruthy();
@@ -25,7 +31,7 @@ describe('AddSessionScreen', () => {
   });
 
   it('renders all stake options', () => {
-    const { getByText } = render(<AddSessionScreen />);
+    const { getByText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     expect(getByText('1/2')).toBeTruthy();
     expect(getByText('1/3')).toBeTruthy();
@@ -35,13 +41,13 @@ describe('AddSessionScreen', () => {
   });
 
   it('renders the submit button', () => {
-    const { getByText } = render(<AddSessionScreen />);
+    const { getByText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     expect(getByText('Record Session')).toBeTruthy();
   });
 
   it('shows validation error when location is empty', () => {
-    const { getByText } = render(<AddSessionScreen />);
+    const { getByText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     fireEvent.press(getByText('Record Session'));
 
@@ -49,7 +55,7 @@ describe('AddSessionScreen', () => {
   });
 
   it('shows validation error when duration is zero', () => {
-    const { getByText, getByPlaceholderText } = render(<AddSessionScreen />);
+    const { getByText, getByPlaceholderText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     fireEvent.changeText(getByPlaceholderText('e.g. Bicycle Club'), 'Test Casino');
     fireEvent.press(getByText('Record Session'));
@@ -58,7 +64,7 @@ describe('AddSessionScreen', () => {
   });
 
   it('shows validation error when result amount is missing', () => {
-    const { getByText, getByPlaceholderText } = render(<AddSessionScreen />);
+    const { getByText, getByPlaceholderText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     fireEvent.changeText(getByPlaceholderText('e.g. Bicycle Club'), 'Test Casino');
     fireEvent.changeText(getByPlaceholderText('0h'), '2');
@@ -67,9 +73,9 @@ describe('AddSessionScreen', () => {
     expect(getByText('Result amount is required')).toBeTruthy();
   });
 
-  it('submits successfully with valid data and shows success message', async () => {
+  it('submits successfully with valid data and navigates back', async () => {
     createSession.mockResolvedValueOnce({ id: 1 });
-    const { getByText, getByPlaceholderText } = render(<AddSessionScreen />);
+    const { getByText, getByPlaceholderText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     fireEvent.changeText(getByPlaceholderText('e.g. Bicycle Club'), 'Bicycle Club');
     fireEvent.changeText(getByPlaceholderText('0h'), '3');
@@ -80,7 +86,7 @@ describe('AddSessionScreen', () => {
     });
 
     await waitFor(() => {
-      expect(getByText('Session recorded!')).toBeTruthy();
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('Sessions');
     });
 
     expect(createSession).toHaveBeenCalledWith(
@@ -95,7 +101,7 @@ describe('AddSessionScreen', () => {
 
   it('submits with negative result (loss)', async () => {
     createSession.mockResolvedValueOnce({ id: 2 });
-    const { getByText, getByPlaceholderText } = render(<AddSessionScreen />);
+    const { getByText, getByPlaceholderText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     fireEvent.changeText(getByPlaceholderText('e.g. Bicycle Club'), 'Commerce');
     fireEvent.changeText(getByPlaceholderText('0h'), '1');
@@ -118,7 +124,7 @@ describe('AddSessionScreen', () => {
 
   it('shows API error message on submission failure', async () => {
     createSession.mockRejectedValueOnce(new Error('Server error'));
-    const { getByText, getByPlaceholderText } = render(<AddSessionScreen />);
+    const { getByText, getByPlaceholderText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     fireEvent.changeText(getByPlaceholderText('e.g. Bicycle Club'), 'Bicycle Club');
     fireEvent.changeText(getByPlaceholderText('0h'), '2');
@@ -133,12 +139,11 @@ describe('AddSessionScreen', () => {
     });
   });
 
-  it('clears form fields after successful submission', async () => {
+  it('navigates to Sessions after successful submission', async () => {
     createSession.mockResolvedValueOnce({ id: 1 });
-    const { getByText, getByPlaceholderText } = render(<AddSessionScreen />);
+    const { getByText, getByPlaceholderText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
-    const locationInput = getByPlaceholderText('e.g. Bicycle Club');
-    fireEvent.changeText(locationInput, 'Bicycle Club');
+    fireEvent.changeText(getByPlaceholderText('e.g. Bicycle Club'), 'Bicycle Club');
     fireEvent.changeText(getByPlaceholderText('0h'), '2');
     fireEvent.changeText(getByPlaceholderText('e.g. 150 or -75'), '150');
 
@@ -147,12 +152,12 @@ describe('AddSessionScreen', () => {
     });
 
     await waitFor(() => {
-      expect(locationInput.props.value).toBe('');
+      expect(mockNavigation.navigate).toHaveBeenCalledWith('Sessions');
     });
   });
 
   it('allows selecting a different stake', () => {
-    const { getByText } = render(<AddSessionScreen />);
+    const { getByText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     fireEvent.press(getByText('2/5'));
 
@@ -162,7 +167,7 @@ describe('AddSessionScreen', () => {
 
   it('submits with selected stake', async () => {
     createSession.mockResolvedValueOnce({ id: 3 });
-    const { getByText, getByPlaceholderText } = render(<AddSessionScreen />);
+    const { getByText, getByPlaceholderText } = render(<AddSessionScreen navigation={mockNavigation} />);
 
     fireEvent.press(getByText('2/5'));
     fireEvent.changeText(getByPlaceholderText('e.g. Bicycle Club'), 'Wynn');

@@ -1,5 +1,6 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
+import { TouchableOpacity } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
@@ -30,22 +31,38 @@ export default function App() {
         <Tab.Screen
           name="Sessions"
           component={SessionsScreen}
-          options={{
+          options={({ navigation }) => ({
             title: 'Sessions',
             tabBarIcon: ({ color, size }) => (
               <Ionicons name="list" color={color} size={size} />
             ),
-          }}
+            headerRight: () => (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Add Session')}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+                style={{ marginRight: 16 }}
+              >
+                <Ionicons name="add-circle" size={28} color={colors.accent} />
+              </TouchableOpacity>
+            ),
+          })}
         />
         <Tab.Screen
           name="Add Session"
           component={AddSessionScreen}
-          options={{
+          options={({ navigation }) => ({
             title: 'Add Session',
-            tabBarIcon: ({ color, size }) => (
-              <Ionicons name="add-circle" color={color} size={size} />
+            tabBarButton: () => null,
+            headerLeft: () => (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Sessions')}
+                style={{ marginLeft: 16 }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="chevron-back" size={28} color={colors.accent} />
+              </TouchableOpacity>
             ),
-          }}
+          })}
         />
       </Tab.Navigator>
     </NavigationContainer>
