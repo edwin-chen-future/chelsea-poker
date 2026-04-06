@@ -12,7 +12,7 @@
 - **API**: API Gateway HTTP API + VPC Link → ECS
 - **API URL**: `https://fl6kz5achb.execute-api.us-west-2.amazonaws.com`
 - **Container Image**: ECR `700788200157.dkr.ecr.us-west-2.amazonaws.com/chelsea-poker:latest`
-- **Render is NOT used** — `render.yaml` is legacy and can be ignored
+- `render.yaml` is unused and can be removed
 
 ### Redeploy after code changes
 
