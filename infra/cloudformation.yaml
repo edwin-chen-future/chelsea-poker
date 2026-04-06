@@ -64,7 +64,7 @@ Resources:
       MasterUserPassword: !Ref DBPassword
       VPCSecurityGroups:
         - !Ref RdsSecurityGroup
-      DBSubnetGroup: !Ref DBSubnetGroup
+      DBSubnetGroupName: !Ref DBSubnetGroup
       PubliclyAccessible: false
       StorageType: gp3
       BackupRetentionPeriod: 7
