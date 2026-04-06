@@ -1,5 +1,23 @@
 # Progress
 
+## 2026-04-06 — Add Session: remember last stake/location + custom location input
+
+**What was built:**
+- `AddSessionScreen`: persists last-used stake and location to `expo-secure-store` on successful submit; restores them as defaults on next open (new session mode only, not edit mode)
+- Added a `TextInput` below the preset location buttons so users can type a custom venue; both the buttons and the text input share one `location` state
+- Fixed pre-existing test issues: missing `route` prop, `navigate` call arity, and `getByPlaceholderText('e.g. Bicycle Club')` expected but absent
+- Added 10 new tests: prefs save/load, custom location input, edit mode isolation
+
+**Key decisions:**
+- Used `expo-secure-store` (already a dependency) rather than adding `@react-native-async-storage/async-storage` — keeps dep count low
+- Location buttons and TextInput share `location` state directly — pressing a button fills the TextInput, typing updates the state and deselects buttons naturally
+- `savePrefs` / `loadPrefs` are extracted as module-level async functions for easy unit testing
+- `route?.params?.session` (optional chaining on `route`) — defensive fix for tests that don't pass a route prop
+
+**Lessons learned:**
+- `useFocusEffect` mock calls `cb()` synchronously, but the callback starts an async prefs load. Use `await act(async () => {})` after `render()` to flush all pending microtasks/state before test interactions — otherwise prefs loading races with test input
+- `renderScreen()` helper pattern (render + flush) makes async-initialized forms easy to test deterministically
+
 ## 2026-04-01 — iOS App (React Native + Expo)
 
 **What was built:**
