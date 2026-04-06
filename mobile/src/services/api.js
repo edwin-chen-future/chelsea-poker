@@ -3,8 +3,47 @@
 // For production: https://chelsea-poker.onrender.com (or your Render URL)
 const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
 
+let authToken = null;
+
+export function setAuthToken(token) {
+  authToken = token;
+}
+
+function authHeaders() {
+  const headers = { 'Content-Type': 'application/json' };
+  if (authToken) {
+    headers['Authorization'] = `Bearer ${authToken}`;
+  }
+  return headers;
+}
+
+// Auth
+
+export async function postGoogleAuth(idToken) {
+  const response = await fetch(`${BASE_URL}/api/auth/google`, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ id_token: idToken }),
+  });
+  if (!response.ok) {
+    let message;
+    try {
+      const body = await response.json();
+      message = body.error || `Auth failed: ${response.status}`;
+    } catch {
+      message = `Auth failed: ${response.status}`;
+    }
+    throw new Error(message);
+  }
+  return response.json();
+}
+
+// Sessions
+
 export async function getSessions() {
-  const response = await fetch(`${BASE_URL}/api/sessions`);
+  const response = await fetch(`${BASE_URL}/api/sessions`, {
+    headers: authHeaders(),
+  });
   if (!response.ok) {
     throw new Error(`Failed to fetch sessions: ${response.status}`);
   }
@@ -14,7 +53,7 @@ export async function getSessions() {
 export async function updateSession(id, sessionData) {
   const response = await fetch(`${BASE_URL}/api/sessions/${id}`, {
     method: 'PUT',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body: JSON.stringify(sessionData),
   });
   if (!response.ok) {
@@ -33,7 +72,7 @@ export async function updateSession(id, sessionData) {
 export async function createSession(sessionData) {
   const response = await fetch(`${BASE_URL}/api/sessions`, {
     method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
+    headers: authHeaders(),
     body: JSON.stringify(sessionData),
   });
   if (!response.ok) {

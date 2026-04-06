@@ -18,6 +18,16 @@ const pool = new Pool({
 
 async function initDb() {
   await pool.query(`
+    CREATE TABLE IF NOT EXISTS users (
+      id            SERIAL PRIMARY KEY,
+      google_id     TEXT UNIQUE NOT NULL,
+      email         TEXT UNIQUE NOT NULL,
+      display_name  TEXT,
+      avatar_url    TEXT,
+      created_at    TIMESTAMPTZ DEFAULT NOW()
+    )
+  `);
+  await pool.query(`
     CREATE TABLE IF NOT EXISTS sessions (
       id               SERIAL PRIMARY KEY,
       stake            TEXT    NOT NULL,
@@ -28,6 +38,9 @@ async function initDb() {
       notes            TEXT,
       created_at       TIMESTAMPTZ DEFAULT NOW()
     )
+  `);
+  await pool.query(`
+    ALTER TABLE sessions ADD COLUMN IF NOT EXISTS user_id INTEGER REFERENCES users(id)
   `);
 }
 

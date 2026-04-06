@@ -10,6 +10,7 @@ import {
   Dimensions,
 } from 'react-native';
 import { getSessions } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { colors, spacing, radius } from '../constants';
 
 const RANGES = ['Week', 'Month', 'Year', 'All'];
@@ -45,6 +46,7 @@ function formatHours(minutes) {
 }
 
 export function ChartsScreen() {
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -118,6 +120,14 @@ export function ChartsScreen() {
       return { date: s.session_date, value: cumulative };
     });
   }, [filtered]);
+
+  if (!user) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>Please sign in from the Profile tab to view charts.</Text>
+      </View>
+    );
+  }
 
   if (loading) {
     return (

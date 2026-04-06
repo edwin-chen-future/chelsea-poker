@@ -2,6 +2,7 @@ const express = require('express');
 const cors = require('cors');
 const path = require('path');
 const { initDb } = require('./db');
+const authRouter = require('./routes/auth');
 const sessionsRouter = require('./routes/sessions');
 
 const app = express();
@@ -14,6 +15,7 @@ app.use(express.json());
 app.use(express.static(path.join(__dirname, 'public')));
 
 // API routes
+app.use('/api/auth', authRouter);
 app.use('/api/sessions', sessionsRouter);
 
 // Catch-all: serve index.html for any non-API route

@@ -11,9 +11,11 @@ import { SessionCard } from '../components/SessionCard';
 import { StatsHeader } from '../components/StatsHeader';
 import { EmptyState } from '../components/EmptyState';
 import { getSessions } from '../services/api';
+import { useAuth } from '../contexts/AuthContext';
 import { colors, spacing } from '../constants';
 
 export function SessionsScreen({ navigation, route }) {
+  const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -49,6 +51,14 @@ export function SessionsScreen({ navigation, route }) {
     setRefreshing(true);
     load(true);
   }, [load]);
+
+  if (!user) {
+    return (
+      <View style={styles.center}>
+        <Text style={styles.errorText}>Please sign in from the Profile tab to view sessions.</Text>
+      </View>
+    );
+  }
 
   if (loading) {
     return (

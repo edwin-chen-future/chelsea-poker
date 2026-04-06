@@ -2,6 +2,7 @@
   "expo": {
     "name": "Chelsea Poker",
     "slug": "chelsea-poker",
+    "scheme": "chelseapoker",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -15,7 +16,9 @@
       }
     },
     "plugins": [
-      "expo-asset"
+      "expo-asset",
+      "expo-web-browser",
+      "expo-secure-store"
     ]
   }
 }

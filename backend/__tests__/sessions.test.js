@@ -9,6 +9,7 @@
 // Must set env var before db.js is loaded (it throws if missing)
 process.env.TEST_DATABASE_URL = 'postgresql://mock/testdb';
 process.env.NODE_ENV = 'test';
+process.env.JWT_SECRET = 'test-secret';
 
 // Jest hoists jest.mock() above all requires, so we cannot reference outer
 // variables inside the factory. Instead we expose the spy via a helper.
@@ -21,10 +22,15 @@ jest.mock('pg', () => {
 });
 
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const pg = require('pg');
 const mockQuery = pg._getMockQuery();
 // server.js exports app without starting the HTTP server (only runs when main)
 const app = require('../server');
+
+// Generate a valid JWT for tests
+const testToken = jwt.sign({ userId: 1, email: 'test@example.com' }, process.env.JWT_SECRET);
+const authHeader = `Bearer ${testToken}`;
 
 // Valid payload used across many tests
 const validSession = {
@@ -52,13 +58,32 @@ beforeEach(() => {
   mockQuery.mockReset();
 });
 
+// ─── Auth ────────────────────────────────────────────────────────────────────
+
+describe('Sessions auth', () => {
+  test('401 — rejects requests without auth header', async () => {
+    const res = await request(app).get('/api/sessions');
+    expect(res.status).toBe(401);
+  });
+
+  test('401 — rejects requests with invalid token', async () => {
+    const res = await request(app)
+      .get('/api/sessions')
+      .set('Authorization', 'Bearer invalid-token');
+    expect(res.status).toBe(401);
+  });
+});
+
 // ─── POST /api/sessions ───────────────────────────────────────────────────────
 
 describe('POST /api/sessions', () => {
   test('201 — saves a valid session and returns the created record', async () => {
     mockQuery.mockResolvedValueOnce({ rows: [dbRow] });
 
-    const res = await request(app).post('/api/sessions').send(validSession);
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send(validSession);
 
     expect(res.status).toBe(201);
     expect(res.body.id).toBe(1);
@@ -70,7 +95,10 @@ describe('POST /api/sessions', () => {
     const { notes, ...withoutNotes } = validSession;
     mockQuery.mockResolvedValueOnce({ rows: [{ ...dbRow, notes: null }] });
 
-    const res = await request(app).post('/api/sessions').send(withoutNotes);
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send(withoutNotes);
 
     expect(res.status).toBe(201);
     expect(res.body.notes).toBeNull();
@@ -79,7 +107,10 @@ describe('POST /api/sessions', () => {
   test('201 — accepts a negative result_amount (a loss)', async () => {
     mockQuery.mockResolvedValueOnce({ rows: [{ ...dbRow, result_amount: '-150.00' }] });
 
-    const res = await request(app).post('/api/sessions').send({ ...validSession, result_amount: -150 });
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send({ ...validSession, result_amount: -150 });
 
     expect(res.status).toBe(201);
     expect(res.body.result_amount).toBe('-150.00');
@@ -87,59 +118,86 @@ describe('POST /api/sessions', () => {
 
   test('400 — rejects missing stake', async () => {
     const { stake, ...payload } = validSession;
-    const res = await request(app).post('/api/sessions').send(payload);
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send(payload);
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/stake/i);
   });
 
   test('400 — rejects empty stake string', async () => {
-    const res = await request(app).post('/api/sessions').send({ ...validSession, stake: '   ' });
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send({ ...validSession, stake: '   ' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/stake/i);
   });
 
   test('400 — rejects missing duration_minutes', async () => {
     const { duration_minutes, ...payload } = validSession;
-    const res = await request(app).post('/api/sessions').send(payload);
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send(payload);
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/duration/i);
   });
 
   test('400 — rejects zero duration_minutes', async () => {
-    const res = await request(app).post('/api/sessions').send({ ...validSession, duration_minutes: 0 });
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send({ ...validSession, duration_minutes: 0 });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/duration/i);
   });
 
   test('400 — rejects non-numeric duration_minutes', async () => {
-    const res = await request(app).post('/api/sessions').send({ ...validSession, duration_minutes: 'abc' });
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send({ ...validSession, duration_minutes: 'abc' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/duration/i);
   });
 
   test('400 — rejects missing result_amount', async () => {
     const { result_amount, ...payload } = validSession;
-    const res = await request(app).post('/api/sessions').send(payload);
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send(payload);
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/result_amount/i);
   });
 
   test('400 — rejects non-numeric result_amount', async () => {
-    const res = await request(app).post('/api/sessions').send({ ...validSession, result_amount: 'win' });
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send({ ...validSession, result_amount: 'win' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/result_amount/i);
   });
 
   test('400 — rejects missing location', async () => {
     const { location, ...payload } = validSession;
-    const res = await request(app).post('/api/sessions').send(payload);
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send(payload);
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/location/i);
   });
 
   test('400 — rejects missing session_date', async () => {
     const { session_date, ...payload } = validSession;
-    const res = await request(app).post('/api/sessions').send(payload);
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send(payload);
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/session_date/i);
   });
@@ -147,7 +205,10 @@ describe('POST /api/sessions', () => {
   test('500 — returns error when DB insert fails', async () => {
     mockQuery.mockRejectedValueOnce(new Error('DB connection lost'));
 
-    const res = await request(app).post('/api/sessions').send(validSession);
+    const res = await request(app)
+      .post('/api/sessions')
+      .set('Authorization', authHeader)
+      .send(validSession);
 
     expect(res.status).toBe(500);
     expect(res.body.error).toMatch(/failed to save/i);
@@ -161,7 +222,9 @@ describe('GET /api/sessions', () => {
     const sessions = [dbRow, { ...dbRow, id: 2, result_amount: '-50.00' }];
     mockQuery.mockResolvedValueOnce({ rows: sessions });
 
-    const res = await request(app).get('/api/sessions');
+    const res = await request(app)
+      .get('/api/sessions')
+      .set('Authorization', authHeader);
 
     expect(res.status).toBe(200);
     expect(Array.isArray(res.body)).toBe(true);
@@ -172,7 +235,9 @@ describe('GET /api/sessions', () => {
   test('200 — returns empty array when no sessions exist', async () => {
     mockQuery.mockResolvedValueOnce({ rows: [] });
 
-    const res = await request(app).get('/api/sessions');
+    const res = await request(app)
+      .get('/api/sessions')
+      .set('Authorization', authHeader);
 
     expect(res.status).toBe(200);
     expect(res.body).toEqual([]);
@@ -181,7 +246,9 @@ describe('GET /api/sessions', () => {
   test('500 — returns error when DB query fails', async () => {
     mockQuery.mockRejectedValueOnce(new Error('Query failed'));
 
-    const res = await request(app).get('/api/sessions');
+    const res = await request(app)
+      .get('/api/sessions')
+      .set('Authorization', authHeader);
 
     expect(res.status).toBe(500);
     expect(res.body.error).toMatch(/failed to fetch/i);
