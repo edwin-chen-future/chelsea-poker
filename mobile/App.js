@@ -6,6 +6,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { SessionsScreen } from './src/screens/SessionsScreen';
 import { AddSessionScreen } from './src/screens/AddSessionScreen';
+import { ChartsScreen } from './src/screens/ChartsScreen';
 import { colors } from './src/constants';
 
 const Tab = createBottomTabNavigator();
@@ -46,6 +47,16 @@ export default function App() {
               </TouchableOpacity>
             ),
           })}
+        />
+        <Tab.Screen
+          name="Charts"
+          component={ChartsScreen}
+          options={{
+            title: 'Charts',
+            tabBarIcon: ({ color, size }) => (
+              <Ionicons name="stats-chart" color={color} size={size} />
+            ),
+          }}
         />
         <Tab.Screen
           name="Add Session"
