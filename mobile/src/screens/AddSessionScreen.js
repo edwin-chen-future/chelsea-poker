@@ -98,7 +98,7 @@ export function AddSessionScreen({ navigation, route }) {
         await createSession(sessionData);
       }
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-      navigation.navigate('Sessions');
+      navigation.navigate('Sessions', { refresh: Date.now() });
     } catch (err) {
       setErrorMessage(err.message);
     } finally {

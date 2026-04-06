@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -7,14 +7,13 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { SessionCard } from '../components/SessionCard';
 import { StatsHeader } from '../components/StatsHeader';
 import { EmptyState } from '../components/EmptyState';
 import { getSessions } from '../services/api';
 import { colors, spacing } from '../constants';
 
-export function SessionsScreen({ navigation }) {
+export function SessionsScreen({ navigation, route }) {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -34,11 +33,17 @@ export function SessionsScreen({ navigation }) {
     }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load])
-  );
+  useEffect(() => {
+    load();
+  }, []);
+
+  // Reload when navigated back after add/edit
+  const refresh = route.params?.refresh;
+  useEffect(() => {
+    if (refresh) {
+      load(true);
+    }
+  }, [refresh]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
