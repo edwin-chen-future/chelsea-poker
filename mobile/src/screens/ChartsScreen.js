@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,9 @@ import {
   TouchableOpacity,
   StyleSheet,
   ActivityIndicator,
+  RefreshControl,
   Dimensions,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { getSessions } from '../services/api';
 import { colors, spacing, radius } from '../constants';
 
@@ -47,11 +47,12 @@ function formatHours(minutes) {
 export function ChartsScreen() {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
   const [range, setRange] = useState('All');
 
-  const load = useCallback(async () => {
-    setLoading(true);
+  const load = useCallback(async (isRefreshing = false) => {
+    if (!isRefreshing) setLoading(true);
     setError(null);
     try {
       const data = await getSessions();
@@ -60,14 +61,18 @@ export function ChartsScreen() {
       setError(err.message);
     } finally {
       setLoading(false);
+      setRefreshing(false);
     }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load])
-  );
+  useEffect(() => {
+    load();
+  }, []);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    load(true);
+  }, [load]);
 
   const filtered = useMemo(() => {
     const cutoff = getRangeCutoff(range);
@@ -131,7 +136,17 @@ export function ChartsScreen() {
   }
 
   return (
-    <ScrollView style={styles.container} contentContainerStyle={styles.content}>
+    <ScrollView
+      style={styles.container}
+      contentContainerStyle={styles.content}
+      refreshControl={
+        <RefreshControl
+          refreshing={refreshing}
+          onRefresh={onRefresh}
+          tintColor={colors.accent}
+        />
+      }
+    >
       {/* Range Selector */}
       <View style={styles.rangeRow}>
         {RANGES.map((r) => (
