@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, radius } from '../constants';
 
 function formatDuration(minutes) {
@@ -16,14 +16,14 @@ function formatResult(amount) {
   return amount >= 0 ? `+${dollars}` : `-${dollars}`;
 }
 
-export function SessionCard({ session }) {
+export function SessionCard({ session, onPress }) {
   const amount = Number(session.result_amount);
   const isWin = amount > 0;
   const isDraw = amount === 0;
   const resultColor = isWin ? colors.win : isDraw ? colors.textSecondary : colors.loss;
 
   return (
-    <View style={styles.card}>
+    <TouchableOpacity style={styles.card} onPress={onPress} activeOpacity={0.7}>
       <View style={styles.row}>
         <View style={styles.left}>
           <Text style={styles.stake}>{session.stake}</Text>
@@ -38,7 +38,7 @@ export function SessionCard({ session }) {
       </View>
       <Text style={styles.date}>{session.session_date}</Text>
       {session.notes ? <Text style={styles.notes}>{session.notes}</Text> : null}
-    </View>
+    </TouchableOpacity>
   );
 }
 

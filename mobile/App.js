@@ -75,6 +75,23 @@ export default function App() {
             ),
           })}
         />
+        <Tab.Screen
+          name="Edit Session"
+          component={AddSessionScreen}
+          options={({ navigation }) => ({
+            title: 'Edit Session',
+            tabBarButton: () => null,
+            headerLeft: () => (
+              <TouchableOpacity
+                onPress={() => navigation.navigate('Sessions')}
+                style={{ marginLeft: 16 }}
+                hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+              >
+                <Ionicons name="chevron-back" size={28} color={colors.accent} />
+              </TouchableOpacity>
+            ),
+          })}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );

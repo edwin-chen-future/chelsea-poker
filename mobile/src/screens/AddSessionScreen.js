@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
-import { createSession } from '../services/api';
+import { createSession, updateSession } from '../services/api';
 import { colors, spacing, radius } from '../constants';
 
 const STAKES = ['1/2', '1/3', '2/5', '5/10', '10/20'];
@@ -30,9 +30,13 @@ function validate({ location, date, hours, minutes, result }) {
   return null;
 }
 
-export function AddSessionScreen({ navigation }) {
+const LOCATIONS = ['Commerce', 'Bicycle', 'Wynn', 'Palm Spring'];
+
+export function AddSessionScreen({ navigation, route }) {
+  const editSession = route.params?.session;
+  const isEditing = !!editSession;
+
   const [stake, setStake] = useState(STAKES[0]);
-  const LOCATIONS = ['Commerce', 'Bicycle', 'Wynn', 'Palm Spring'];
   const [location, setLocation] = useState(LOCATIONS[0]);
   const [date, setDate] = useState(todayString());
   const [hours, setHours] = useState('');
@@ -44,15 +48,27 @@ export function AddSessionScreen({ navigation }) {
 
   useFocusEffect(
     useCallback(() => {
-      setStake(STAKES[0]);
-      setLocation('');
-      setDate(todayString());
-      setHours('');
-      setMinutes('');
-      setResult('');
-      setNotes('');
+      if (editSession) {
+        setStake(editSession.stake);
+        setLocation(editSession.location);
+        setDate(editSession.session_date);
+        const h = Math.floor(editSession.duration_minutes / 60);
+        const m = editSession.duration_minutes % 60;
+        setHours(h > 0 ? String(h) : '');
+        setMinutes(m > 0 ? String(m) : '');
+        setResult(String(editSession.result_amount));
+        setNotes(editSession.notes || '');
+      } else {
+        setStake(STAKES[0]);
+        setLocation(LOCATIONS[0]);
+        setDate(todayString());
+        setHours('');
+        setMinutes('');
+        setResult('');
+        setNotes('');
+      }
       setErrorMessage('');
-    }, [])
+    }, [editSession])
   );
 
   async function handleSubmit() {
@@ -68,14 +84,19 @@ export function AddSessionScreen({ navigation }) {
     try {
       const totalMinutes =
         (parseInt(hours, 10) || 0) * 60 + (parseInt(minutes, 10) || 0);
-      await createSession({
+      const sessionData = {
         stake,
         location: location.trim(),
         session_date: date.trim(),
         duration_minutes: totalMinutes,
         result_amount: Number(result),
         notes: notes.trim() || undefined,
-      });
+      };
+      if (isEditing) {
+        await updateSession(editSession.id, sessionData);
+      } else {
+        await createSession(sessionData);
+      }
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       navigation.navigate('Sessions');
     } catch (err) {
@@ -192,7 +213,7 @@ export function AddSessionScreen({ navigation }) {
           accessibilityRole="button"
         >
           <Text style={styles.submitButtonText}>
-            {submitting ? 'Recording...' : 'Record Session'}
+            {submitting ? 'Saving...' : isEditing ? 'Update Session' : 'Record Session'}
           </Text>
         </TouchableOpacity>
       </ScrollView>

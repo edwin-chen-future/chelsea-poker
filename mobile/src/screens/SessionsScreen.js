@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   FlatList,
@@ -7,13 +7,14 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native';
+import { useFocusEffect } from '@react-navigation/native';
 import { SessionCard } from '../components/SessionCard';
 import { StatsHeader } from '../components/StatsHeader';
 import { EmptyState } from '../components/EmptyState';
 import { getSessions } from '../services/api';
 import { colors, spacing } from '../constants';
 
-export function SessionsScreen() {
+export function SessionsScreen({ navigation }) {
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,9 +34,11 @@ export function SessionsScreen() {
     }
   }, []);
 
-  useEffect(() => {
-    load();
-  }, []);
+  useFocusEffect(
+    useCallback(() => {
+      load();
+    }, [load])
+  );
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
@@ -66,7 +69,12 @@ export function SessionsScreen() {
       keyExtractor={(item) => String(item.id)}
       ListHeaderComponent={<StatsHeader sessions={sessions} />}
       ListEmptyComponent={<EmptyState />}
-      renderItem={({ item }) => <SessionCard session={item} />}
+      renderItem={({ item }) => (
+        <SessionCard
+          session={item}
+          onPress={() => navigation.navigate('Edit Session', { session: item })}
+        />
+      )}
       refreshControl={
         <RefreshControl
           refreshing={refreshing}
