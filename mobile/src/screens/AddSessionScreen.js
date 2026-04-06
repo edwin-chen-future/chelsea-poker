@@ -11,10 +11,13 @@ import {
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import * as Haptics from 'expo-haptics';
+import * as SecureStore from 'expo-secure-store';
 import { createSession, updateSession } from '../services/api';
 import { colors, spacing, radius } from '../constants';
 
 const STAKES = ['1/2', '1/3', '2/5', '5/10', '10/20'];
+const LOCATIONS = ['Commerce', 'Bicycle', 'Wynn', 'Palm Spring'];
+const PREFS_KEY = 'last_session_prefs';
 
 function todayString() {
   return new Date().toISOString().split('T')[0];
@@ -30,14 +33,30 @@ function validate({ location, date, hours, minutes, result }) {
   return null;
 }
 
-const LOCATIONS = ['Commerce', 'Bicycle', 'Wynn', 'Palm Spring'];
+async function loadPrefs() {
+  try {
+    const raw = await SecureStore.getItemAsync(PREFS_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch (e) {
+    console.warn('Failed to load session prefs:', e);
+  }
+  return null;
+}
+
+async function savePrefs(stake, location) {
+  try {
+    await SecureStore.setItemAsync(PREFS_KEY, JSON.stringify({ stake, location }));
+  } catch (e) {
+    console.warn('Failed to save session prefs:', e);
+  }
+}
 
 export function AddSessionScreen({ navigation, route }) {
-  const editSession = route.params?.session;
+  const editSession = route?.params?.session;
   const isEditing = !!editSession;
 
   const [stake, setStake] = useState(STAKES[0]);
-  const [location, setLocation] = useState(LOCATIONS[0]);
+  const [location, setLocation] = useState('');
   const [date, setDate] = useState(todayString());
   const [hours, setHours] = useState('');
   const [minutes, setMinutes] = useState('');
@@ -59,13 +78,17 @@ export function AddSessionScreen({ navigation, route }) {
         setResult(String(editSession.result_amount));
         setNotes(editSession.notes || '');
       } else {
-        setStake(STAKES[0]);
-        setLocation(LOCATIONS[0]);
-        setDate(todayString());
-        setHours('');
-        setMinutes('');
-        setResult('');
-        setNotes('');
+        async function applyPrefs() {
+          const prefs = await loadPrefs();
+          setStake(prefs?.stake || STAKES[0]);
+          setLocation(prefs?.location || LOCATIONS[0]);
+          setDate(todayString());
+          setHours('');
+          setMinutes('');
+          setResult('');
+          setNotes('');
+        }
+        applyPrefs();
       }
       setErrorMessage('');
     }, [editSession])
@@ -97,6 +120,7 @@ export function AddSessionScreen({ navigation, route }) {
       } else {
         await createSession(sessionData);
       }
+      await savePrefs(stake, location.trim());
       await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
       navigation.navigate('Sessions', { refresh: Date.now() });
     } catch (err) {
@@ -150,6 +174,13 @@ export function AddSessionScreen({ navigation, route }) {
             </TouchableOpacity>
           ))}
         </View>
+        <TextInput
+          style={[styles.input, styles.locationInput]}
+          value={location}
+          onChangeText={setLocation}
+          placeholder="e.g. Bicycle Club"
+          placeholderTextColor={colors.textTertiary}
+        />
 
         <Text style={styles.label}>Date</Text>
         <TextInput
@@ -259,6 +290,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm + 2,
     fontSize: 16,
     minHeight: 44,
+  },
+  locationInput: {
+    marginTop: spacing.sm,
   },
   stakeRow: {
     flexDirection: 'row',
