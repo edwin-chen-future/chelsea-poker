@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   FlatList,
@@ -7,7 +7,6 @@ import {
   Text,
   ActivityIndicator,
 } from 'react-native';
-import { useFocusEffect } from '@react-navigation/native';
 import { SessionCard } from '../components/SessionCard';
 import { StatsHeader } from '../components/StatsHeader';
 import { EmptyState } from '../components/EmptyState';
@@ -34,11 +33,9 @@ export function SessionsScreen() {
     }
   }, []);
 
-  useFocusEffect(
-    useCallback(() => {
-      load();
-    }, [load])
-  );
+  useEffect(() => {
+    load();
+  }, []);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
