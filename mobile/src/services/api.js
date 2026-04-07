@@ -51,14 +51,22 @@ export async function getSessions({ limit = 20, offset = 0 } = {}) {
 }
 
 export async function getAllSessions() {
-  const response = await fetch(`${BASE_URL}/api/sessions?limit=100&offset=0`, {
-    headers: authHeaders(),
-  });
-  if (!response.ok) {
-    throw new Error(`Failed to fetch sessions: ${response.status}`);
+  let all = [];
+  let offset = 0;
+  const limit = 100;
+  while (true) {
+    const response = await fetch(`${BASE_URL}/api/sessions?limit=${limit}&offset=${offset}`, {
+      headers: authHeaders(),
+    });
+    if (!response.ok) {
+      throw new Error(`Failed to fetch sessions: ${response.status}`);
+    }
+    const data = await response.json();
+    all = all.concat(data.sessions);
+    if (all.length >= data.total) break;
+    offset += limit;
   }
-  const data = await response.json();
-  return data.sessions;
+  return all;
 }
 
 export async function updateSession(id, sessionData) {
