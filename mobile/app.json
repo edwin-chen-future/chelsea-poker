@@ -6,14 +6,26 @@
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
+    "icon": "./assets/icon.png",
+    "splash": {
+      "image": "./assets/splash.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#000000"
+    },
     "ios": {
       "supportsTablet": false,
-      "bundleIdentifier": "com.chelseapoker.app"
+      "bundleIdentifier": "com.chelseapoker.app",
+      "buildNumber": "1",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#1C1C1E"
-      }
+      },
+      "package": "com.chelseapoker.app"
     },
     "plugins": [
       "expo-asset",
