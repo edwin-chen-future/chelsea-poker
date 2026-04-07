@@ -52,7 +52,7 @@ export function ChartsScreen() {
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
-  const [range, setRange] = useState('All');
+  const [range, setRange] = useState('Week');
 
   const load = useCallback(async (isRefreshing = false) => {
     if (!isRefreshing) setLoading(true);
