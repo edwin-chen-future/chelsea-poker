@@ -15,7 +15,7 @@ import * as SecureStore from 'expo-secure-store';
 import { createSession, updateSession } from '../services/api';
 import { colors, spacing, radius } from '../constants';
 
-const STAKES = ['1/2', '1/3', '2/5', '5/10', '10/20'];
+const STAKES = ['1/3', '2/3', '2/5', '5/5', '5/10'];
 const LOCATIONS = ['Commerce', 'Bicycle', 'Wynn', 'Palm Spring'];
 const PREFS_KEY = 'last_session_prefs';
 

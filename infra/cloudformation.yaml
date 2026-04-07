@@ -15,6 +15,9 @@ Parameters:
   GoogleClientIds:
     Type: String
     Description: Comma-separated Google OAuth client IDs for token validation
+  GoogleWebClientId:
+    Type: String
+    Description: Google OAuth web client ID for server-side auth flow
   ECRImageUri:
     Type: String
     Description: ECR image URI (e.g. 123456789.dkr.ecr.us-east-1.amazonaws.com/chelsea-poker:latest)
@@ -100,6 +103,15 @@ Resources:
             Action: sts:AssumeRole
       ManagedPolicyArns:
         - arn:aws:iam::aws:policy/service-role/AmazonECSTaskExecutionRolePolicy
+      Policies:
+        - PolicyName: SecretsManagerAccess
+          PolicyDocument:
+            Version: '2012-10-17'
+            Statement:
+              - Effect: Allow
+                Action:
+                  - secretsmanager:GetSecretValue
+                Resource: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:chelsea-poker/*
 
   TaskRole:
     Type: AWS::IAM::Role
@@ -169,6 +181,13 @@ Resources:
               Value: !Ref JwtSecret
             - Name: GOOGLE_CLIENT_IDS
               Value: !Ref GoogleClientIds
+            - Name: GOOGLE_WEB_CLIENT_ID
+              Value: !Ref GoogleWebClientId
+            - Name: API_BASE_URL
+              Value: !GetAtt HttpApi.ApiEndpoint
+          Secrets:
+            - Name: GOOGLE_WEB_CLIENT_SECRET
+              ValueFrom: !Sub arn:aws:secretsmanager:${AWS::Region}:${AWS::AccountId}:secret:chelsea-poker/google-web-client-secret-z6WSzs
           LogConfiguration:
             LogDriver: awslogs
             Options:

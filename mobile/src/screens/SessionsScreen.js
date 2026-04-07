@@ -36,8 +36,8 @@ export function SessionsScreen({ navigation, route }) {
   }, []);
 
   useEffect(() => {
-    load();
-  }, []);
+    if (user) load();
+  }, [user]);
 
   // Reload when navigated back after add/edit
   const refresh = route.params?.refresh;

@@ -11,7 +11,7 @@ import { useAuth } from '../contexts/AuthContext';
 import { colors, spacing, radius } from '../constants';
 
 export function ProfileScreen() {
-  const { user, loading, signIn, signOut, request } = useAuth();
+  const { user, loading, signIn, signOut } = useAuth();
 
   if (loading) {
     return (
@@ -29,7 +29,6 @@ export function ProfileScreen() {
         <TouchableOpacity
           style={styles.googleButton}
           onPress={signIn}
-          disabled={!request}
         >
           <Text style={styles.googleButtonText}>Sign in with Google</Text>
         </TouchableOpacity>

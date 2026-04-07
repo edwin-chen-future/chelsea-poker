@@ -68,8 +68,8 @@ export function ChartsScreen() {
   }, []);
 
   useEffect(() => {
-    load();
-  }, []);
+    if (user) load();
+  }, [user]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
