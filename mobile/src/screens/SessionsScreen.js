@@ -20,6 +20,7 @@ export function SessionsScreen({ navigation, route }) {
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [total, setTotal] = useState(0);
+  const [stats, setStats] = useState(null);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
@@ -32,6 +33,7 @@ export function SessionsScreen({ navigation, route }) {
       const data = await getSessions({ limit: PAGE_SIZE, offset: 0 });
       setSessions(data.sessions);
       setTotal(data.total);
+      setStats(data.stats);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -101,7 +103,7 @@ export function SessionsScreen({ navigation, route }) {
       contentContainerStyle={styles.content}
       data={sessions}
       keyExtractor={(item) => String(item.id)}
-      ListHeaderComponent={<StatsHeader sessions={sessions} />}
+      ListHeaderComponent={<StatsHeader stats={stats} />}
       ListEmptyComponent={<EmptyState />}
       renderItem={({ item }) => (
         <SessionCard

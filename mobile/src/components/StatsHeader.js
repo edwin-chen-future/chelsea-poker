@@ -8,9 +8,9 @@ function formatAmount(amount) {
   return amount >= 0 ? `+${dollars}` : `-${dollars}`;
 }
 
-export function StatsHeader({ sessions }) {
-  const count = sessions.length;
-  const total = sessions.reduce((sum, s) => sum + Number(s.result_amount), 0);
+export function StatsHeader({ stats }) {
+  const count = stats?.count || 0;
+  const total = stats?.totalProfit || 0;
   const average = count > 0 ? total / count : 0;
   const totalColor = total >= 0 ? colors.win : colors.loss;
   const avgColor = average >= 0 ? colors.win : colors.loss;

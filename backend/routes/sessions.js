@@ -54,19 +54,24 @@ router.get('/', async (req, res) => {
   const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
 
   try {
-    const [dataResult, countResult] = await Promise.all([
+    const [dataResult, statsResult] = await Promise.all([
       pool.query(
         'SELECT * FROM sessions WHERE user_id = $1 ORDER BY session_date DESC, created_at DESC LIMIT $2 OFFSET $3',
         [req.user.userId, limit, offset]
       ),
       pool.query(
-        'SELECT COUNT(*) FROM sessions WHERE user_id = $1',
+        'SELECT COUNT(*) AS count, COALESCE(SUM(result_amount), 0) AS total_profit FROM sessions WHERE user_id = $1',
         [req.user.userId]
       ),
     ]);
+    const stats = statsResult.rows[0];
     return res.json({
       sessions: dataResult.rows,
-      total: parseInt(countResult.rows[0].count, 10),
+      total: parseInt(stats.count, 10),
+      stats: {
+        count: parseInt(stats.count, 10),
+        totalProfit: parseFloat(stats.total_profit),
+      },
     });
   } catch (err) {
     console.error('Error fetching sessions:', err);
