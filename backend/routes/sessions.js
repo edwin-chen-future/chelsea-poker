@@ -50,12 +50,24 @@ router.post('/', async (req, res) => {
 
 // GET /api/sessions — list current user's sessions, newest first
 router.get('/', async (req, res) => {
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 20, 1), 100);
+  const offset = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+
   try {
-    const result = await pool.query(
-      'SELECT * FROM sessions WHERE user_id = $1 ORDER BY session_date DESC, created_at DESC',
-      [req.user.userId]
-    );
-    return res.json(result.rows);
+    const [dataResult, countResult] = await Promise.all([
+      pool.query(
+        'SELECT * FROM sessions WHERE user_id = $1 ORDER BY session_date DESC, created_at DESC LIMIT $2 OFFSET $3',
+        [req.user.userId, limit, offset]
+      ),
+      pool.query(
+        'SELECT COUNT(*) FROM sessions WHERE user_id = $1',
+        [req.user.userId]
+      ),
+    ]);
+    return res.json({
+      sessions: dataResult.rows,
+      total: parseInt(countResult.rows[0].count, 10),
+    });
   } catch (err) {
     console.error('Error fetching sessions:', err);
     return res.status(500).json({ error: 'Failed to fetch sessions' });

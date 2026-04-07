@@ -40,14 +40,25 @@ export async function postGoogleAuth(idToken) {
 
 // Sessions
 
-export async function getSessions() {
-  const response = await fetch(`${BASE_URL}/api/sessions`, {
+export async function getSessions({ limit = 20, offset = 0 } = {}) {
+  const response = await fetch(`${BASE_URL}/api/sessions?limit=${limit}&offset=${offset}`, {
     headers: authHeaders(),
   });
   if (!response.ok) {
     throw new Error(`Failed to fetch sessions: ${response.status}`);
   }
   return response.json();
+}
+
+export async function getAllSessions() {
+  const response = await fetch(`${BASE_URL}/api/sessions?limit=100&offset=0`, {
+    headers: authHeaders(),
+  });
+  if (!response.ok) {
+    throw new Error(`Failed to fetch sessions: ${response.status}`);
+  }
+  const data = await response.json();
+  return data.sessions;
 }
 
 export async function updateSession(id, sessionData) {

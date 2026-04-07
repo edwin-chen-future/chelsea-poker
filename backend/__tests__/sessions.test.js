@@ -218,29 +218,48 @@ describe('POST /api/sessions', () => {
 // ─── GET /api/sessions ────────────────────────────────────────────────────────
 
 describe('GET /api/sessions', () => {
-  test('200 — returns a list of sessions', async () => {
+  test('200 — returns paginated sessions with total', async () => {
     const sessions = [dbRow, { ...dbRow, id: 2, result_amount: '-50.00' }];
-    mockQuery.mockResolvedValueOnce({ rows: sessions });
+    mockQuery
+      .mockResolvedValueOnce({ rows: sessions })
+      .mockResolvedValueOnce({ rows: [{ count: '2' }] });
 
     const res = await request(app)
       .get('/api/sessions')
       .set('Authorization', authHeader);
 
     expect(res.status).toBe(200);
-    expect(Array.isArray(res.body)).toBe(true);
-    expect(res.body).toHaveLength(2);
-    expect(res.body[0].id).toBe(1);
+    expect(Array.isArray(res.body.sessions)).toBe(true);
+    expect(res.body.sessions).toHaveLength(2);
+    expect(res.body.total).toBe(2);
+    expect(res.body.sessions[0].id).toBe(1);
   });
 
   test('200 — returns empty array when no sessions exist', async () => {
-    mockQuery.mockResolvedValueOnce({ rows: [] });
+    mockQuery
+      .mockResolvedValueOnce({ rows: [] })
+      .mockResolvedValueOnce({ rows: [{ count: '0' }] });
 
     const res = await request(app)
       .get('/api/sessions')
       .set('Authorization', authHeader);
 
     expect(res.status).toBe(200);
-    expect(res.body).toEqual([]);
+    expect(res.body.sessions).toEqual([]);
+    expect(res.body.total).toBe(0);
+  });
+
+  test('200 — respects limit and offset params', async () => {
+    mockQuery
+      .mockResolvedValueOnce({ rows: [dbRow] })
+      .mockResolvedValueOnce({ rows: [{ count: '50' }] });
+
+    const res = await request(app)
+      .get('/api/sessions?limit=10&offset=20')
+      .set('Authorization', authHeader);
+
+    expect(res.status).toBe(200);
+    expect(res.body.total).toBe(50);
   });
 
   test('500 — returns error when DB query fails', async () => {

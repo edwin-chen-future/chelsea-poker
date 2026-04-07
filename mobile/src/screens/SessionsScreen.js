@@ -14,19 +14,24 @@ import { getSessions } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { colors, spacing } from '../constants';
 
+const PAGE_SIZE = 20;
+
 export function SessionsScreen({ navigation, route }) {
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
+  const [total, setTotal] = useState(0);
   const [loading, setLoading] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [error, setError] = useState(null);
 
-  const load = useCallback(async (isRefreshing = false) => {
+  const loadFirst = useCallback(async (isRefreshing = false) => {
     if (!isRefreshing) setLoading(true);
     setError(null);
     try {
-      const data = await getSessions();
-      setSessions(data);
+      const data = await getSessions({ limit: PAGE_SIZE, offset: 0 });
+      setSessions(data.sessions);
+      setTotal(data.total);
     } catch (err) {
       setError(err.message);
     } finally {
@@ -35,22 +40,36 @@ export function SessionsScreen({ navigation, route }) {
     }
   }, []);
 
+  const loadMore = useCallback(async () => {
+    if (loadingMore || sessions.length >= total) return;
+    setLoadingMore(true);
+    try {
+      const data = await getSessions({ limit: PAGE_SIZE, offset: sessions.length });
+      setSessions(prev => [...prev, ...data.sessions]);
+      setTotal(data.total);
+    } catch {
+      // Silently fail on load more
+    } finally {
+      setLoadingMore(false);
+    }
+  }, [loadingMore, sessions.length, total]);
+
   useEffect(() => {
-    if (user) load();
+    if (user) loadFirst();
   }, [user]);
 
   // Reload when navigated back after add/edit
   const refresh = route.params?.refresh;
   useEffect(() => {
     if (refresh) {
-      load(true);
+      loadFirst(true);
     }
   }, [refresh]);
 
   const onRefresh = useCallback(() => {
     setRefreshing(true);
-    load(true);
-  }, [load]);
+    loadFirst(true);
+  }, [loadFirst]);
 
   if (!user) {
     return (
@@ -96,6 +115,13 @@ export function SessionsScreen({ navigation, route }) {
           onRefresh={onRefresh}
           tintColor={colors.accent}
         />
+      }
+      onEndReached={loadMore}
+      onEndReachedThreshold={0.3}
+      ListFooterComponent={
+        loadingMore ? (
+          <ActivityIndicator color={colors.accent} style={{ paddingVertical: spacing.md }} />
+        ) : null
       }
     />
   );

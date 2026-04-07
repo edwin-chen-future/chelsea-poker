@@ -9,7 +9,7 @@ import {
   RefreshControl,
   Dimensions,
 } from 'react-native';
-import { getSessions } from '../services/api';
+import { getAllSessions } from '../services/api';
 import { useAuth } from '../contexts/AuthContext';
 import { colors, spacing, radius } from '../constants';
 
@@ -57,7 +57,7 @@ export function ChartsScreen() {
     if (!isRefreshing) setLoading(true);
     setError(null);
     try {
-      const data = await getSessions();
+      const data = await getAllSessions();
       setSessions(data);
     } catch (err) {
       setError(err.message);
