@@ -360,8 +360,8 @@ function CumulativeChart({ data }) {
 }
 
 function SessionBars({ sessions }) {
-  const amounts = sessions.map((s) => Number(s.result_amount));
-  const maxAbs = Math.max(...amounts.map(Math.abs), 1);
+  const amounts = sessions.map((s) => Math.abs(Number(s.result_amount)));
+  const maxAmount = Math.max(...amounts, 1);
   const barWidth = Math.max(
     2,
     (Dimensions.get('window').width - spacing.md * 2 - CHART_PADDING * 2 - 32) / sessions.length - 2
@@ -372,48 +372,24 @@ function SessionBars({ sessions }) {
       <View style={styles.barsRow}>
         {sessions.map((s, i) => {
           const amount = Number(s.result_amount);
-          const height = (Math.abs(amount) / maxAbs) * (CHART_HEIGHT / 2);
-          const isWin = amount >= 0;
+          const height = (Math.abs(amount) / maxAmount) * CHART_HEIGHT;
 
           return (
             <View key={s.id || i} style={styles.barWrapper}>
-              {/* Win bar (above zero) */}
-              <View style={styles.barHalf}>
-                {isWin && (
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height,
-                        width: barWidth,
-                        backgroundColor: colors.win,
-                        alignSelf: 'flex-end',
-                      },
-                    ]}
-                  />
-                )}
-              </View>
-              {/* Loss bar (below zero) */}
-              <View style={styles.barHalf}>
-                {!isWin && (
-                  <View
-                    style={[
-                      styles.bar,
-                      {
-                        height,
-                        width: barWidth,
-                        backgroundColor: colors.loss,
-                      },
-                    ]}
-                  />
-                )}
-              </View>
+              <View
+                style={[
+                  styles.bar,
+                  {
+                    height,
+                    width: barWidth,
+                    backgroundColor: amount >= 0 ? colors.win : colors.loss,
+                  },
+                ]}
+              />
             </View>
           );
         })}
       </View>
-      {/* Zero line for bars */}
-      <View style={[styles.barsZeroLine]} />
     </View>
   );
 }
@@ -539,34 +515,20 @@ const styles = StyleSheet.create({
   // Session bars
   barsContainer: {
     height: CHART_HEIGHT,
-    position: 'relative',
   },
   barsRow: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-end',
     height: CHART_HEIGHT,
     justifyContent: 'center',
     gap: 2,
   },
   barWrapper: {
-    height: CHART_HEIGHT,
-    justifyContent: 'center',
-  },
-  barHalf: {
-    height: CHART_HEIGHT / 2,
     justifyContent: 'flex-end',
   },
   bar: {
     borderRadius: 2,
     minHeight: 2,
-  },
-  barsZeroLine: {
-    position: 'absolute',
-    top: CHART_HEIGHT / 2,
-    left: 0,
-    right: 0,
-    height: 1,
-    backgroundColor: colors.separator,
   },
   // Stats grid
   statsGrid: {
