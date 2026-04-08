@@ -6,8 +6,7 @@
     "start": "expo start",
     "ios": "expo start --ios",
     "android": "expo start --android",
-    "test": "jest",
-    "export:web": "expo export --platform web --clear && node -e \"const fs=require('fs');const p='dist/index.html';fs.writeFileSync(p,fs.readFileSync(p,'utf8').replace('height: 100%;\\n      }','height: 100%;\\n        background-color: #000000;\\n      }'))\""
+    "test": "jest"
   },
   "dependencies": {
     "@expo/metro-runtime": "^55.0.9",
