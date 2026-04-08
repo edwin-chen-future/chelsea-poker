@@ -1,7 +1,7 @@
 import React from 'react';
 import { StatusBar } from 'expo-status-bar';
 import { TouchableOpacity } from 'react-native';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { AuthProvider } from './src/contexts/AuthContext';
@@ -13,14 +13,19 @@ import { colors } from './src/constants';
 
 const Tab = createBottomTabNavigator();
 
+const navTheme = {
+  ...DefaultTheme,
+  colors: { ...DefaultTheme.colors, background: colors.background },
+};
+
 export default function App() {
   return (
     <AuthProvider>
-      <NavigationContainer>
+      <NavigationContainer theme={navTheme}>
         <StatusBar style="light" />
         <Tab.Navigator
           screenOptions={{
-            headerStyle: { backgroundColor: colors.background },
+            headerStyle: { backgroundColor: colors.surface },
             headerTintColor: colors.textPrimary,
             headerTitleStyle: { fontWeight: '700', fontSize: 17 },
             tabBarStyle: {
