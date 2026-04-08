@@ -20,7 +20,7 @@ export default function App() {
         <StatusBar style="light" />
         <Tab.Navigator
           screenOptions={{
-            headerStyle: { backgroundColor: colors.surface },
+            headerStyle: { backgroundColor: colors.background },
             headerTintColor: colors.textPrimary,
             headerTitleStyle: { fontWeight: '700', fontSize: 17 },
             tabBarStyle: {
