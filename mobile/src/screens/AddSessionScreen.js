@@ -10,9 +10,9 @@ import {
   Platform,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
-import * as Haptics from 'expo-haptics';
-import * as SecureStore from 'expo-secure-store';
 import { createSession, updateSession } from '../services/api';
+import { getItem, setItem } from '../services/storage';
+import { impact } from '../services/haptics';
 import { colors, spacing, radius } from '../constants';
 
 const STAKES = ['1/3', '2/3', '2/5', '5/5', '5/10'];
@@ -23,11 +23,9 @@ function todayString() {
   return new Date().toISOString().split('T')[0];
 }
 
-function validate({ location, date, hours, minutes, result }) {
+function validate({ location, date, result }) {
   if (!location.trim()) return 'Location is required';
   if (!date.trim()) return 'Date is required';
-  const totalMinutes = (parseInt(hours, 10) || 0) * 60 + (parseInt(minutes, 10) || 0);
-  if (totalMinutes <= 0) return 'Duration must be at least 1 minute';
   if (result === '' || result === '-') return 'Result amount is required';
   if (isNaN(Number(result))) return 'Result must be a number';
   return null;
@@ -35,7 +33,7 @@ function validate({ location, date, hours, minutes, result }) {
 
 async function loadPrefs() {
   try {
-    const raw = await SecureStore.getItemAsync(PREFS_KEY);
+    const raw = await getItem(PREFS_KEY);
     if (raw) return JSON.parse(raw);
   } catch (e) {
     console.warn('Failed to load session prefs:', e);
@@ -45,7 +43,7 @@ async function loadPrefs() {
 
 async function savePrefs(stake, location) {
   try {
-    await SecureStore.setItemAsync(PREFS_KEY, JSON.stringify({ stake, location }));
+    await setItem(PREFS_KEY, JSON.stringify({ stake, location }));
   } catch (e) {
     console.warn('Failed to save session prefs:', e);
   }
@@ -58,8 +56,6 @@ export function AddSessionScreen({ navigation, route }) {
   const [stake, setStake] = useState(STAKES[0]);
   const [location, setLocation] = useState('');
   const [date, setDate] = useState(todayString());
-  const [hours, setHours] = useState('');
-  const [minutes, setMinutes] = useState('');
   const [result, setResult] = useState('');
   const [notes, setNotes] = useState('');
   const [submitting, setSubmitting] = useState(false);
@@ -71,10 +67,6 @@ export function AddSessionScreen({ navigation, route }) {
         setStake(editSession.stake);
         setLocation(editSession.location);
         setDate(editSession.session_date);
-        const h = Math.floor(editSession.duration_minutes / 60);
-        const m = editSession.duration_minutes % 60;
-        setHours(h > 0 ? String(h) : '');
-        setMinutes(m > 0 ? String(m) : '');
         setResult(String(editSession.result_amount));
         setNotes(editSession.notes || '');
       } else {
@@ -83,8 +75,6 @@ export function AddSessionScreen({ navigation, route }) {
           setStake(prefs?.stake || STAKES[0]);
           setLocation(prefs?.location || LOCATIONS[0]);
           setDate(todayString());
-          setHours('');
-          setMinutes('');
           setResult('');
           setNotes('');
         }
@@ -95,7 +85,7 @@ export function AddSessionScreen({ navigation, route }) {
   );
 
   async function handleSubmit() {
-    const validationError = validate({ location, date, hours, minutes, result });
+    const validationError = validate({ location, date, result });
     if (validationError) {
       setErrorMessage(validationError);
       return;
@@ -105,13 +95,10 @@ export function AddSessionScreen({ navigation, route }) {
     setErrorMessage('');
 
     try {
-      const totalMinutes =
-        (parseInt(hours, 10) || 0) * 60 + (parseInt(minutes, 10) || 0);
       const sessionData = {
         stake,
         location: location.trim(),
         session_date: date.trim(),
-        duration_minutes: totalMinutes,
         result_amount: Number(result),
         notes: notes.trim() || undefined,
       };
@@ -121,7 +108,7 @@ export function AddSessionScreen({ navigation, route }) {
         await createSession(sessionData);
       }
       await savePrefs(stake, location.trim());
-      await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+      await impact();
       navigation.navigate('Sessions', { refresh: Date.now() });
     } catch (err) {
       setErrorMessage(err.message);
@@ -183,34 +170,7 @@ export function AddSessionScreen({ navigation, route }) {
         />
 
         <Text style={styles.label}>Date</Text>
-        <TextInput
-          style={styles.input}
-          value={date}
-          onChangeText={setDate}
-          placeholder="YYYY-MM-DD"
-          placeholderTextColor={colors.textTertiary}
-          keyboardType="numbers-and-punctuation"
-        />
-
-        <Text style={styles.label}>Duration</Text>
-        <View style={styles.durationRow}>
-          <TextInput
-            style={[styles.input, styles.durationInput]}
-            value={hours}
-            onChangeText={setHours}
-            placeholder="0h"
-            placeholderTextColor={colors.textTertiary}
-            keyboardType="number-pad"
-          />
-          <TextInput
-            style={[styles.input, styles.durationInput]}
-            value={minutes}
-            onChangeText={setMinutes}
-            placeholder="0m"
-            placeholderTextColor={colors.textTertiary}
-            keyboardType="number-pad"
-          />
-        </View>
+        <DatePicker value={date} onChange={setDate} />
 
         <Text style={styles.label}>Result ($)</Text>
         <TextInput
@@ -249,6 +209,46 @@ export function AddSessionScreen({ navigation, route }) {
         </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
+  );
+}
+
+// Cross-platform date picker: native input[type=date] on web, styled text input on native
+function DatePicker({ value, onChange }) {
+  if (Platform.OS === 'web') {
+    return (
+      <input
+        type="date"
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        style={{
+          backgroundColor: colors.surface,
+          color: colors.textPrimary,
+          borderRadius: radius.sm,
+          paddingLeft: spacing.md,
+          paddingRight: spacing.md,
+          paddingTop: spacing.sm + 2,
+          paddingBottom: spacing.sm + 2,
+          fontSize: 16,
+          minHeight: 44,
+          border: 'none',
+          width: '100%',
+          boxSizing: 'border-box',
+          colorScheme: 'dark',
+        }}
+      />
+    );
+  }
+
+  // On native, use a styled TextInput with YYYY-MM-DD format hint
+  return (
+    <TextInput
+      style={styles.input}
+      value={value}
+      onChangeText={onChange}
+      placeholder="YYYY-MM-DD"
+      placeholderTextColor={colors.textTertiary}
+      keyboardType="numbers-and-punctuation"
+    />
   );
 }
 
@@ -317,13 +317,6 @@ const styles = StyleSheet.create({
   },
   stakeButtonTextActive: {
     color: colors.textPrimary,
-  },
-  durationRow: {
-    flexDirection: 'row',
-    gap: spacing.sm,
-  },
-  durationInput: {
-    flex: 1,
   },
   notesInput: {
     minHeight: 80,

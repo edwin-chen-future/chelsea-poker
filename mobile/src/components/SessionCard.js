@@ -2,14 +2,6 @@ import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { colors, spacing, radius } from '../constants';
 
-function formatDuration(minutes) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
-
 function formatResult(amount) {
   const abs = Math.abs(amount);
   const dollars = `$${Math.round(abs)}`;
@@ -33,7 +25,6 @@ export function SessionCard({ session, onPress }) {
           <Text style={[styles.result, { color: resultColor }]}>
             {formatResult(amount)}
           </Text>
-          <Text style={styles.duration}>{formatDuration(session.duration_minutes)}</Text>
         </View>
       </View>
       <Text style={styles.date}>{session.session_date}</Text>
@@ -74,11 +65,6 @@ const styles = StyleSheet.create({
   result: {
     fontSize: 20,
     fontWeight: '700',
-  },
-  duration: {
-    color: colors.textTertiary,
-    fontSize: 13,
-    marginTop: 2,
   },
   date: {
     color: colors.textTertiary,

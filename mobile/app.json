@@ -27,10 +27,20 @@
       },
       "package": "com.chelseapoker.app"
     },
+    "web": {
+      "bundler": "metro",
+      "favicon": "./assets/icon.png"
+    },
     "plugins": [
       "expo-asset",
       "expo-web-browser",
       "expo-secure-store"
-    ]
+    ],
+    "extra": {
+      "eas": {
+        "projectId": "c51be383-ea3c-4273-9923-ff60c58b3d93"
+      }
+    },
+    "owner": "chenwenzhe.dev"
   }
 }

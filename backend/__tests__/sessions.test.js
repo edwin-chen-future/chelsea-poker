@@ -35,7 +35,6 @@ const authHeader = `Bearer ${testToken}`;
 // Valid payload used across many tests
 const validSession = {
   stake: '1/2',
-  duration_minutes: 180,
   result_amount: 250.5,
   location: 'Wynn',
   session_date: '2026-03-16',
@@ -46,7 +45,6 @@ const validSession = {
 const dbRow = {
   id: 1,
   stake: '1/2',
-  duration_minutes: 180,
   result_amount: '250.50',
   location: 'Wynn',
   session_date: '2026-03-16',
@@ -133,34 +131,6 @@ describe('POST /api/sessions', () => {
       .send({ ...validSession, stake: '   ' });
     expect(res.status).toBe(400);
     expect(res.body.error).toMatch(/stake/i);
-  });
-
-  test('400 — rejects missing duration_minutes', async () => {
-    const { duration_minutes, ...payload } = validSession;
-    const res = await request(app)
-      .post('/api/sessions')
-      .set('Authorization', authHeader)
-      .send(payload);
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/duration/i);
-  });
-
-  test('400 — rejects zero duration_minutes', async () => {
-    const res = await request(app)
-      .post('/api/sessions')
-      .set('Authorization', authHeader)
-      .send({ ...validSession, duration_minutes: 0 });
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/duration/i);
-  });
-
-  test('400 — rejects non-numeric duration_minutes', async () => {
-    const res = await request(app)
-      .post('/api/sessions')
-      .set('Authorization', authHeader)
-      .send({ ...validSession, duration_minutes: 'abc' });
-    expect(res.status).toBe(400);
-    expect(res.body.error).toMatch(/duration/i);
   });
 
   test('400 — rejects missing result_amount', async () => {

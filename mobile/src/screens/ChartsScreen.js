@@ -38,13 +38,6 @@ function formatAmount(amount) {
   return amount >= 0 ? `+${dollars}` : `-${dollars}`;
 }
 
-function formatHours(minutes) {
-  const h = Math.floor(minutes / 60);
-  const m = minutes % 60;
-  if (h === 0) return `${m}m`;
-  if (m === 0) return `${h}h`;
-  return `${h}h ${m}m`;
-}
 
 export function ChartsScreen() {
   const { user } = useAuth();
@@ -95,8 +88,6 @@ export function ChartsScreen() {
     const total = filtered.reduce((s, x) => s + Number(x.result_amount), 0);
     const wins = filtered.filter((x) => Number(x.result_amount) > 0).length;
     const losses = filtered.filter((x) => Number(x.result_amount) < 0).length;
-    const totalMinutes = filtered.reduce((s, x) => s + x.duration_minutes, 0);
-    const hourlyRate = totalMinutes > 0 ? (total / totalMinutes) * 60 : 0;
     const bestSession = Math.max(...filtered.map((x) => Number(x.result_amount)));
     const worstSession = Math.min(...filtered.map((x) => Number(x.result_amount)));
     return {
@@ -106,8 +97,6 @@ export function ChartsScreen() {
       wins,
       losses,
       winRate: (wins / count) * 100,
-      totalMinutes,
-      hourlyRate,
       bestSession,
       worstSession,
     };
@@ -218,15 +207,6 @@ export function ChartsScreen() {
                 label="Win Rate"
                 value={`${Math.round(stats.winRate)}%`}
                 color={stats.winRate >= 50 ? colors.win : colors.loss}
-              />
-              <StatItem
-                label="$/Hour"
-                value={formatAmount(stats.hourlyRate)}
-                color={stats.hourlyRate >= 0 ? colors.win : colors.loss}
-              />
-              <StatItem
-                label="Time Played"
-                value={formatHours(stats.totalMinutes)}
               />
               <StatItem
                 label="Best Session"

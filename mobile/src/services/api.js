@@ -1,7 +1,9 @@
 // Set EXPO_PUBLIC_API_URL in a .env file to point at a different backend.
 // For local development: http://localhost:3000
 // For production: https://chelsea-poker.onrender.com (or your Render URL)
-const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'http://localhost:3000';
+import { Platform } from 'react-native';
+
+const BASE_URL = process.env.EXPO_PUBLIC_API_URL || (Platform.OS === 'web' ? '' : 'http://localhost:3000');
 
 let authToken = null;
 

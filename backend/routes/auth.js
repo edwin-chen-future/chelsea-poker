@@ -23,7 +23,9 @@ router.get('/google/start', (req, res) => {
   const baseUrl = getBaseUrl(req);
   const redirectUri = `${baseUrl}/api/auth/google/callback`;
   const clientId = process.env.GOOGLE_WEB_CLIENT_ID || getWebClientId();
-  const nonce = Math.random().toString(36).substring(2);
+  // Encode platform (web vs native) in state so callback knows how to respond
+  const platform = req.query.platform || 'native';
+  const state = Buffer.from(JSON.stringify({ platform })).toString('base64');
 
   const params = new URLSearchParams({
     client_id: clientId,
@@ -31,7 +33,7 @@ router.get('/google/start', (req, res) => {
     response_type: 'code',
     scope: 'openid profile email',
     access_type: 'offline',
-    state: nonce,
+    state,
   });
 
   res.redirect(`https://accounts.google.com/o/oauth2/v2/auth?${params}`);
@@ -114,13 +116,28 @@ router.get('/google/callback', async (req, res) => {
       avatar_url: user.avatar_url,
     };
 
-    // Redirect back to the app with token and user data
+    // Decode platform from state
+    let platform = 'native';
+    try {
+      const stateObj = JSON.parse(Buffer.from(req.query.state || '', 'base64').toString());
+      platform = stateObj.platform || 'native';
+    } catch {}
+
     const appParams = new URLSearchParams({
       token,
       user: JSON.stringify(userData),
     });
 
-    res.redirect(`chelseapoker://auth?${appParams}`);
+    if (platform === 'web') {
+      // For web: serve a page that posts the token back to the opener and closes
+      const callbackUrl = `${getBaseUrl(req)}/auth/callback?${appParams}`;
+      res.send(`<!DOCTYPE html><html><body><script>
+        window.opener && window.opener.postMessage({type:'auth-callback',url:${JSON.stringify(callbackUrl)}}, window.opener.location.origin);
+        window.close();
+      </script></body></html>`);
+    } else {
+      res.redirect(`chelseapoker://auth?${appParams}`);
+    }
   } catch (err) {
     console.error('Error in Google callback:', err);
     return res.status(500).send('Authentication failed.');

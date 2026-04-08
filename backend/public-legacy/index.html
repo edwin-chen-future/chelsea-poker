@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Chelsea Poker</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+  <div class="container">
+    <h1>♠ Chelsea Poker</h1>
+    <p class="subtitle">Track your poker sessions over time</p>
+
+    <!-- Record Session Form -->
+    <div class="card">
+      <h2>Record Session</h2>
+      <form id="session-form">
+        <div class="form-grid">
+
+          <div class="form-group">
+            <label for="stake">Stake</label>
+            <select id="stake" name="stake" required>
+              <option value="" disabled selected>Select stake</option>
+              <option value="0.25/0.5">0.25/0.5 NL</option>
+              <option value="0.5/1">0.5/1 NL</option>
+              <option value="1/2">1/2 NL</option>
+              <option value="1/3">1/3 NL</option>
+              <option value="2/5">2/5 NL</option>
+              <option value="5/10">5/10 NL</option>
+              <option value="10/20">10/20 NL</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="location">Location</label>
+            <select id="location" name="location" required>
+              <option value="">Select location</option>
+              <option value="Commerce">Commerce</option>
+              <option value="Bicycle">Bicycle</option>
+              <option value="Wynn">Wynn</option>
+              <option value="Palm Spring">Palm Spring</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="session_date">Date</label>
+            <input type="date" id="session_date" name="session_date" required />
+          </div>
+
+          <div class="form-group">
+            <label for="duration_minutes">Duration (minutes)</label>
+            <input type="number" id="duration_minutes" name="duration_minutes" min="1" placeholder="e.g. 240" required />
+          </div>
+
+          <div class="form-group">
+            <label for="result_amount">Result ($)</label>
+            <input type="number" id="result_amount" name="result_amount" step="0.01" placeholder="e.g. 350 or -150" required />
+            <span class="result-hint">Positive = win, negative = loss</span>
+          </div>
+
+          <div class="form-group full-width">
+            <label for="notes">Notes (optional)</label>
+            <textarea id="notes" name="notes" placeholder="Any notes about the session..."></textarea>
+          </div>
+
+        </div>
+
+        <button type="submit" id="submit-btn">Save Session</button>
+        <div id="form-message" class="message" role="alert"></div>
+      </form>
+    </div>
+
+    <!-- Session History -->
+    <div class="card">
+      <div class="history-header">
+        <h2>Session History</h2>
+        <div class="stats" id="stats" style="display:none">
+          <div class="stat">Sessions: <span id="stat-count">0</span></div>
+          <div class="stat">Total: <span id="stat-total">$0</span></div>
+          <div class="stat">Avg/session: <span id="stat-avg">$0</span></div>
+        </div>
+      </div>
+      <div id="history-container">
+        <div class="loading">Loading sessions...</div>
+      </div>
+    </div>
+  </div>
+
+  <script src="app.js"></script>
+</body>
+</html>
